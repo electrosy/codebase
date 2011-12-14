@@ -27,7 +27,7 @@ Uint32 g_black = SDL_MapRGB(Video1.GetScreen()->format, 0x00, 0x00, 0x00);//Defi
 
 ScreenFont ScreenFont1;
 Block Block1(&Video1);
-CFloor Floor1(&Video1);
+//CFloor Floor1(&Video1);
 
 void keyBoardTest(Video *keysVideoptr) //starts the game.
 {   
