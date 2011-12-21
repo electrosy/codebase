@@ -4,24 +4,27 @@
 
 CFloor::CFloor(Video* Video1)
 {
-	BlockPiece = Video1->NewLoadImage("./resources/BlockPiece.bmp");
+	
+	LeftPiece = Video1->NewLoadImage("./resources/FloorPieceLeft.bmp");
 
-	this->x=0;
-	this->y=0;
-	this->height=1;
-	this->width=5;
+	//for positioning.
+	floorx =0;
+	floory =575;
+	rwallx =0;
+	rwally =0;
+	lwallx =0;
+	lwally =0;
 }
-
-
 
 CFloor::~CFloor(void)
 {
 }
 
-void CFloor::Draw(Video* Video1)
+void CFloor::Draw(Video* Video1, int orientation)
 {
-		Video1->ApplySurface(x, y, BlockPiece);
-		Video1->ApplySurface(x, y+height, BlockPiece);
-		Video1->ApplySurface(x, y+height+height, BlockPiece);
-		Video1->ApplySurface(x+width, y+height+height, BlockPiece);
+		int length = 25;
+
+		
 }
+
+

@@ -10,12 +10,13 @@
 /// TODO: Put the events into a Queue to be worked by a seperate thread.
 #include <string>
 #include <stdio.h>
+#include <map>
 
 #include "SDL.h"
 
 #include "video.h" //allows us to create a video object.
 #include "screenfont.h" //a ttf font
-#include "Block.h"
+#include "BlockBase.h"
 #include "Timer.h"
 
 //#include "button.h"
@@ -26,8 +27,16 @@ Video Video1;
 Uint32 g_black = SDL_MapRGB(Video1.GetScreen()->format, 0x00, 0x00, 0x00);//Defines a color
 
 ScreenFont ScreenFont1;
-Block Block1(&Video1);
-//CFloor Floor1(&Video1);
+
+
+//std::map<std::string, BlockBase> BlocksOnScreen;
+
+
+//BlockOnScreen.insert("LBlock", (&Video1, "LBlock", 0, 0));
+//BlockOnScreen.insert("FloorBottom", (&Video1, "FloorBottom", 10, 500));
+
+BlockBase Block1(&Video1, "LBlock", 0, 0);
+BlockBase Floor(&Video1, "FloorBottom", 10, 500);
 
 void keyBoardTest(Video *keysVideoptr) //starts the game.
 {   
@@ -68,6 +77,7 @@ void keyBoardTest(Video *keysVideoptr) //starts the game.
 		{
 		    printf("TimeToMoveDown: \n");
 			Block1.FallDown();
+			
 		}
 		if (BlockMover.TimeToMove() && BlockMove != "")
 		{
@@ -76,7 +86,6 @@ void keyBoardTest(Video *keysVideoptr) //starts the game.
 			{
 				Block1.MoveLeft();
 				//if key is not currently suppressed.
-				
 				
 			}
 			if (BlockMove == "right")
@@ -169,7 +178,10 @@ void keyBoardTest(Video *keysVideoptr) //starts the game.
 			}
 		}
 
+		//DrawAll the pieces.
+		Floor.Draw(&Video1, 0);
 		Block1.Draw(&Video1, orientation);
+
 		Video1.Flip();
 		SDL_FillRect(SDL_GetVideoSurface(), NULL, g_black);
 	}

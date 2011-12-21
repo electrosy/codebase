@@ -5,19 +5,24 @@
 class CFloor
 {
 
-
 private: 
 	
-	int x;
-	int y;
-	int height;
-	int width;
+	int floorx;
+	int floory;
+	int rwallx;
+	int rwally;
+	int lwallx;
+	int lwally;
+	int iHeight;
+	int iWidth;
 
-	SDL_Surface* BlockPiece;
+	SDL_Surface* BottomPiece;
+	SDL_Surface* LeftPiece;
 
 	
 public:
 		CFloor(Video* Video1);
 		~CFloor(void);
-		void CFloor::Draw(Video* Video1);
+		void CFloor::Draw(Video* Video1, int orientation);
 };
+
