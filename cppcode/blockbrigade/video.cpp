@@ -28,12 +28,14 @@ Video::Video(){
         exit(1);
     }
     //set the window caption
-    SDL_WM_SetCaption("SDL Test \"double O\" - Version 0.1", NULL);
+    SDL_WM_SetCaption("SDL Game \"double O\" - Version 0.1", NULL);
 
 
 	//Load Background
 	m_pBackGround = NewLoadImage("./resources/background.bmp");
 	m_pSprites = new SDL_Surface;
+
+
 }//End Constructor.
 
 Video::~Video()
@@ -74,7 +76,7 @@ void Video::Flip()
 
 void Video::PrintPixel(int x, int y, Uint32 pixel)
 {
-/* Lock the screen for direct access to the pixels */
+	/* Lock the screen for direct access to the pixels */
     if ( SDL_MUSTLOCK(screen) ) {
         if ( SDL_LockSurface(screen) < 0 ) {
             fprintf(stderr, "Can't lock screen: %s\n", SDL_GetError());

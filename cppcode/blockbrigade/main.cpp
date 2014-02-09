@@ -11,6 +11,7 @@
 #include <string>
 #include <stdio.h>
 #include <map>
+#include <vector>
 
 #include "SDL.h"
 
@@ -22,28 +23,141 @@
 //#include "button.h"
 SDL_Event event; //SDL event
 
-Video Video1;
+Video theVideo;
+Video* Video1 = &theVideo;
 
-Uint32 g_black = SDL_MapRGB(Video1.GetScreen()->format, 0x00, 0x00, 0x00);//Defines a color
+Uint32 g_black = SDL_MapRGB(Video1->GetScreen()->format, 0x00, 0x00, 0x00);//Defines a color
+Uint32 g_yellow = SDL_MapRGB(Video1->GetScreen()->format, 0x55, 0x55, 0x55);
 
 ScreenFont ScreenFont1;
 
+SDL_Surface* sfcBlockPiece = Video1->NewLoadImage("./resources/BlockPiece.bmp");
 
-//std::map<std::string, BlockBase> BlocksOnScreen;
 
 
-//BlockOnScreen.insert("LBlock", (&Video1, "LBlock", 0, 0));
-//BlockOnScreen.insert("FloorBottom", (&Video1, "FloorBottom", 10, 500));
+std::vector<BlockBase> vecBlocksInPlay;
 
-BlockBase Block1(&Video1, "LBlock", 0, 0);
-BlockBase Floor(&Video1, "FloorBottom", 10, 500);
+BlockBase Block1(Video1, "LBlock", 1, 0, sfcBlockPiece);
+BlockBase Block2(Video1, "LBlock", 1, 400, sfcBlockPiece);
+BlockBase Block3(Video1, "SqBlock", 41, 200, sfcBlockPiece);
+BlockBase Floor(Video1, "FloorBottom", 0, 500, sfcBlockPiece);
 
-void keyBoardTest(Video *keysVideoptr) //starts the game.
-{   
 
-	Timer Timer1(500);
-	Timer BlockMover(125);
-    Timer BlockMoverDown(50);
+
+
+std::set<std::pair<int,int>> AddValueToSet(std::set<std::pair<int,int>> & setIn, int xChange, int yChange) 
+{ //This shifts the whole set up, down, left or right. Can change both x and y at the same time.
+	std::set<std::pair<int,int>> newSet;
+	std::set<std::pair<int,int>>::iterator iT;
+
+	for(iT = setIn.begin(); iT != setIn.end(); iT++)
+	{
+		newSet.insert( std::make_pair(iT->first + (xChange), iT->second + (yChange) ));
+	}
+
+	return newSet;
+}
+
+bool AnyFromSetAInSetB(std::set<std::pair<int,int>> & a, std::set<std::pair<int,int>> & b)
+{
+	bool bReturn = 0;
+
+	std::set<std::pair<int,int>>::iterator itA;
+	std::set<std::pair<int,int>>::iterator itB;
+
+	for(itA = a.begin(); itA != a.end(); itA++) //loop through a, to see if we can find any from a in b. `
+	{
+		if(bReturn == 1)
+		{
+			break;
+		}
+		
+		std::pair<int,int> tempPairA = std::make_pair(itA->first, itA->second);
+
+		if(b.find(tempPairA) != b.end())
+		{
+			bReturn = 1;
+			break;
+		}
+	}
+
+	return bReturn;
+}	
+
+void DrawColisionBoundry(Video * Video1, std::set<std::pair<int,int>> & shiftset)
+{
+	Uint32 ColorPurple = SDL_MapRGB(Video1->GetScreen()->format, 0x55, 0x00, 0x55);
+
+	std::set<std::pair<int,int>>::iterator it;
+
+	for(it=shiftset.begin(); it != shiftset.end();it++)
+	{
+		Video1->PrintPixel(it->first,it->second,ColorPurple);
+	}
+}
+
+
+bool WillCollideOnNextMove(std::set<std::pair<int,int>> & a, std::set<std::pair<int,int>> & b, std::string sDirection, BlockBase & Block1)
+{
+	bool bWillCollide = 0;
+	std::set<std::pair<int,int>> testSet;
+
+	if(sDirection == "down")
+	{
+		//all y's + height
+		testSet = AddValueToSet(a, 0, Block1.GetPieceHeight());
+		bWillCollide = AnyFromSetAInSetB(testSet, b);
+
+	}
+	else if (sDirection == "up")
+	{
+		//all y's - height
+		testSet = AddValueToSet(a, 0, Block1.GetPieceHeight()*-1);
+		bWillCollide = AnyFromSetAInSetB(testSet, b);
+	}
+	else if (sDirection == "right")
+	{
+		//all x's + width
+		testSet = AddValueToSet(a, Block1.GetPieceWidth(),0);
+		bWillCollide = AnyFromSetAInSetB(testSet, b);
+	}
+	else if (sDirection == "left")
+	{
+		//all x's - width
+		testSet = AddValueToSet(a, Block1.GetPieceWidth()*-1,0);
+		bWillCollide = AnyFromSetAInSetB(testSet, b);
+	}
+
+	DrawColisionBoundry(Video1, testSet);
+
+	return bWillCollide;
+}
+
+bool WillCollideWithBlocksInPlay(std::string BlockMove)
+{
+
+	bool bReturn = 0;
+
+	if(
+	WillCollideOnNextMove(Block1.getBorder(), Floor.getBorder(), BlockMove, Block1)
+						|| WillCollideOnNextMove(Block1.getBorder(), Block2.getBorder(), BlockMove, Block1)
+	)
+	{ bReturn = 1; }
+
+	return bReturn;
+}
+
+
+
+bool WillActiveBlockCollideWithListOfBlocks();
+
+void keyBoardTest(Video *keysVideoptr) //TODO rename keyBoardTest to something more meaningfull, like MainGameLoop or something.
+{//starts the game.  
+
+	Timer FallDownTimer(500);
+	Timer BlockMover(125); //control speed of left right motion.
+    Timer BlockMoverDown(50); // control speed of downward motion
+	Timer GameLoopRate(20);
 
 	SDL_Rect TextLocation;
 	SDL_Rect loc_MouseTest;
@@ -73,10 +187,15 @@ void keyBoardTest(Video *keysVideoptr) //starts the game.
 
 	while(quit==false)
 	{	
-		if (Timer1.TimeToMove())
+		if(!GameLoopRate.TimeToMove())
+		{
+			continue;
+		}
+
+		if (FallDownTimer.TimeToMove())
 		{
 		    printf("TimeToMoveDown: \n");
-			Block1.FallDown();
+	//		Block1.FallDown();
 			
 		}
 		if (BlockMover.TimeToMove() && BlockMove != "")
@@ -84,19 +203,28 @@ void keyBoardTest(Video *keysVideoptr) //starts the game.
 			printf("TimeToMoveLeftRight: %s \n", BlockMove.c_str());
 			if (BlockMove == "left")
 			{
-				Block1.MoveLeft();
+				if(!WillCollideWithBlocksInPlay(BlockMove))
+				{
+					Block1.MoveLeft();
+				}
 				//if key is not currently suppressed.
 				
 			}
 			if (BlockMove == "right")
 			{
-				Block1.MoveRight();
+				if(!WillCollideWithBlocksInPlay(BlockMove))
+				{
+					Block1.MoveRight();
+				}
 				
 			}
 		}
 		if (BlockMoverDown.TimeToMove() && BlockMove == "down")
 		{
-			Block1.MoveDown();
+			if(!WillCollideWithBlocksInPlay(BlockMove))
+			{
+				Block1.MoveDown();
+			}
 		}
 
 		while(SDL_PollEvent(&event))
@@ -125,9 +253,12 @@ void keyBoardTest(Video *keysVideoptr) //starts the game.
 						printf("orientation: %d", orientation);
 					}
 					
-					if(KeyPress == "down")
+					if(KeyPress == "down" && !BlockMoverDown.TimeToMove())
 					{
-						Block1.MoveDown();
+						if(!Block1.getBorder().empty() && !WillCollideWithBlocksInPlay(KeyPress))
+						{
+							Block1.MoveDown();
+						}
 						BlockMove = "down";
 						BlockMoverDown.Reset();
 					}
@@ -150,7 +281,7 @@ void keyBoardTest(Video *keysVideoptr) //starts the game.
 					}
 					if (KeyPress == "z")
 					{
-						Block1.SetPos(10,10);
+						Block1.SetPos(1,0);
 					}
 
 					break;
@@ -164,7 +295,7 @@ void keyBoardTest(Video *keysVideoptr) //starts the game.
 					printf("Mouse Position %d , %d, %d, %d", event.motion.xrel, event.motion.yrel, event.motion.x, event.motion.y);
 					sprintf(c_string, "mouse position %d , %d, %d, %d", event.motion.xrel, event.motion.yrel, event.motion.x, event.motion.y);
 					KeyPress = c_string;
-					Video1.ApplySurface(300, 577, ScreenFont1.DrawFontString(KeyPress));
+					Video1->ApplySurface(300, 577, ScreenFont1.DrawFontString(KeyPress));
 					fontCounter += 28;
 					break;
 
@@ -179,10 +310,13 @@ void keyBoardTest(Video *keysVideoptr) //starts the game.
 		}
 
 		//DrawAll the pieces.
-		Floor.Draw(&Video1, 0);
-		Block1.Draw(&Video1, orientation);
+		Floor.Draw(Video1, 0);
 
-		Video1.Flip();
+		Block1.Draw(Video1, orientation);
+		Block2.Draw(Video1, 0);
+		Block3.Draw(Video1, 0);
+
+		Video1->Flip();
 		SDL_FillRect(SDL_GetVideoSurface(), NULL, g_black);
 	}
 
@@ -192,28 +326,23 @@ void keyBoardTest(Video *keysVideoptr) //starts the game.
 
 int main(int argc, char *args[]){
 
+	
+	vecBlocksInPlay.push_back(Block2);
+	vecBlocksInPlay.push_back(Block3);
+	vecBlocksInPlay.push_back(Floor);
+
 	char VideoDriver[50];
 
-
- 
-	//*This stuff is for the mouse butten that was not successfully implemented 
-	//*but all the code should be here somewhere.
-	//make the button
-	//Button myButton(170,120,320,240, &Video1);
-    
 	bool quit = false; //bool to see if user wants to exit the game.
 	SDL_VideoDriverName(VideoDriver, 50);
 	printf("Video Driver: %s\n", VideoDriver);
 
-	Video1.ApplySurface(10,50,ScreenFont1.DrawFontString("Welcome to the game it will start soon!!!"));
-	Video1.Flip();
-	SDL_Delay(700); // TODO Instead of a delay there needs to be a timer.	    
-    
-	keyBoardTest(&Video1);
+	Video1->ApplySurface(10,50,ScreenFont1.DrawFontString("Welcome to the game it will start soon!!!"));
+	Video1->Flip();
+
+	keyBoardTest(Video1);
 	
-	Video1.~Video(); //Distory Video object before exiting SDL
-	exit(0);
+ 	exit(0);
 
     return 0;
 }
-

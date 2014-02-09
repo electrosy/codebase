@@ -28,7 +28,7 @@ Uint32 Timer::TimeToMove(void)
 		time_up = 1;
 	}
 
-    return (time_up);
+    return time_up;
 }
 
 

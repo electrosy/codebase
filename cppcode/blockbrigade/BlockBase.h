@@ -5,15 +5,65 @@
 #include "Timer.h"
 
 
+
+#include <set>
+#include <string>
+
+
 class BlockBase
 {
 
-private: 
+
+
+protected:
+
+	int Run()
+	{
+		SDL_Delay(500);
+		return 0;	
+	}
+
+public:
+
+	BlockBase(Video*, std::string, int, int, SDL_Surface * BlockPiece);
+	~BlockBase(void);
+
+	void HandleKeyDepress();
+	void SetPos(int x, int y);
+
+	void Draw(Video* Video1, int orientation);
+	void FallDown();
+	void MoveDown();
+	void MoveLeft();
+	void MoveRight();
+
+	void CheckAction();
+
+	bool DidCollide(); //flag if collided or not 
+	void SetCollided(); // set collide = 1
+
+	int GetPieceHeight() {return height;};
+	int GetPieceWidth() {return width;};
+
+	std::set<std::pair<int,int>> getBorder();
+
+	private: 
 	
 	int x;
 	int y;
 	int height;
 	int width;
+	std::set<std::pair<int,int>> m_border; //All the x and y cordinates that make up the boundry 	
+	bool bDidCollide;
+	int m_WidthOfCurrentOrientation;
+
+	std::string LastInput;
+	std::string Orientation;
+	std::string m_sBlockType;
+
+	SDL_Surface* BlockPiece;
+
+	enum eDirection { DOWN, UP, LEFT, RIGHT };
 
 	Uint32 LeftRightTick(std::string Behavior)
 	{
@@ -93,35 +143,22 @@ private:
 		return(next_time-now);
 	}
 
-	std::string LastInput;
-	std::string Orientation;
-	std::string m_sBlockType;
+	
 
-	SDL_Surface* BlockPiece;
+	void AddBorderLine(std::pair<int,int> start, std::pair<int,int> finish);
 
-protected:
+	eDirection FindDirectionToCount(int x1,int y1,int x2,int y2);
 
-	int Run()
-	{
-		SDL_Delay(500);
-		return 0;	
-	}
+	void AddSingleBorder(std::pair<int, int> start, std::pair<int,int> finish, eDirection);
 
-public:
+	void AddBorderDown(int y1, int y2, int x);
 
-	void HandleKeyDepress();
-	void SetPos(int x, int y);
+	void AddBorderUp(int y1, int y2, int x);
 
-	void Draw(Video* Video1, int orientation);
-	void CheckIfMoveWillCollide(); //Check if this block will colide with any other block when making a move
-	void FallDown();
-	void MoveDown();
-	void MoveLeft();
-	void MoveRight();
+	void AddBorderLeft(int x1, int x2, int y);
 
-	void CheckAction();
+	void AddBorderRight(int x1, int x2, int y);
 
-	BlockBase(Video*, std::string, int, int);
-	~BlockBase(void);
+	void DrawColisionBoundry(Video * Video1);
 
 };
