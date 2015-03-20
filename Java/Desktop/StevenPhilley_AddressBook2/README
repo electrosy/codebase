@@ -1,6 +1,6 @@
 To build and run. 
 
-navagate to the src directly and run the following:
+navagate to the src directory and run the following:
 
 ForBuild:
 javac edu/frontrange/csc241/a5/input/InputData.java
