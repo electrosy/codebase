@@ -1,0 +1,9 @@
+To build and run. 
+
+navagate to the src directly and run the following:
+
+ForBuild:
+javac edu/frontrange/csc241/a5/input/InputData.java
+javac stevenphilley_addressbook/*.java
+ToRun:
+java stevenphilley_addressbook/StevenPhilley_AddressBook
